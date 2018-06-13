@@ -5,6 +5,7 @@ BUS="3"
 ADDRESS="10"
 BASE_DIR=/home/$USER/ddcbr
 FILE=$BASE_DIR/.brightness
+LOCK_FILE=$BASE_DIR/.lock
 
 function getCurrentBrightness {
     if [ -f $FILE ]
@@ -53,6 +54,13 @@ function decreaseBrightness {
     echo $new_br > $FILE
 }
 
+# Do nothing if it is already running. Not a good way to do this.
+if [ -f $LOCK_FILE ]
+    then
+        exit
+    else
+        touch $LOCK_FILE
+fi
 
 if [ "$1" = "i" ]
 then
@@ -63,3 +71,5 @@ else
         decreaseBrightness
     fi
 fi
+
+rm $LOCK_FILE
