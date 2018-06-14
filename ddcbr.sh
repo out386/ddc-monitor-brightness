@@ -13,7 +13,7 @@ function getCurrentBrightness {
     then
         current_br=$(cat $FILE)
     fi
-    if [ -z "$current_br" ]
+    if [[ ! $current_br =~ ^[0-9]+$ ]]
     then
         current_br=$($DDC $BUS getvcp $ADDRESS | awk '{print $9}' | awk -F ',' '{print $1}')
     fi
@@ -62,6 +62,10 @@ function sendNotification {
     then
         id=$(cat $NOTIF_FILE)
     else
+        id=0
+    fi
+    if [[ ! $id =~ ^[0-9]+$ ]]
+    then
         id=0
     fi
 
