@@ -6,6 +6,7 @@ ADDRESS="10"
 BASE_DIR=/home/$USER/ddcbr
 FILE=$BASE_DIR/.brightness
 LOCK_FILE=$BASE_DIR/.lock
+NOTIF_FILE=$BASE_DIR/.notifId
 
 function getCurrentBrightness {
     if [ -f $FILE ]
@@ -34,6 +35,7 @@ function increaseBrightness {
     $DDC $BUS setvcp $ADDRESS $new_br
     echo $new_br
     echo $new_br > $FILE
+    sendNotification $new_br
 }
 
 function decreaseBrightness {
@@ -52,6 +54,31 @@ function decreaseBrightness {
     $DDC $BUS setvcp $ADDRESS $new_br
     echo $new_br
     echo $new_br > $FILE
+    sendNotification $new_br
+}
+
+function sendNotification {
+    if [ -f $NOTIF_FILE ]
+    then
+        id=$(cat $NOTIF_FILE)
+    else
+        id=0
+    fi
+
+    id=$(gdbus call --session \
+        --dest org.freedesktop.Notifications \
+        --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify \
+        DDCBR \
+        $id \
+        notification-display-brightness-full \
+        "Brightness" \
+        "$1%" \
+        [] \
+        "{'type':<'int'>, 'name':<'value'>, 'value':<'$1'>, 'type':<'string'>, 'name':<'synchronous'>, 'value':<'volume'>}" 1)
+    id=$(echo $id | sed 's/[^ ]* //; s/,.//')
+
+    # Saving the notification ID allows replacing the notification if the script gets called again before the notification closes
+    echo $id > $NOTIF_FILE
 }
 
 # Do nothing if it is already running. Not a good way to do this.
