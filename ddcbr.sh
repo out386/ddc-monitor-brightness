@@ -29,11 +29,11 @@ function increaseBrightness {
         then
             new_br=100
         else
+            sendNotification 100
             return 0
         fi
     fi
     $DDC $BUS setvcp $ADDRESS $new_br
-    echo $new_br
     echo $new_br > $FILE
     sendNotification $new_br
 }
@@ -48,16 +48,18 @@ function decreaseBrightness {
         then
             new_br=0
         else
+            sendNotification 0
             return 0
         fi
     fi
     $DDC $BUS setvcp $ADDRESS $new_br
-    echo $new_br
     echo $new_br > $FILE
     sendNotification $new_br
 }
 
 function sendNotification {
+    echo "Brightness: $1%"
+
     if [ -f $NOTIF_FILE ]
     then
         id=$(cat $NOTIF_FILE)
