@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 DDC="ddcutil --nodetect --noverify --bus"
 BUS="3"
