@@ -24,18 +24,13 @@ function increaseBrightness {
     if [ "$current_br" -le 90 ]
     then
         new_br=$((current_br + 10))
-    else
-        if [ "$current_br" -lt 100 ]
-        then
+    elif [ "$current_br" -lt 100 ]; then
             new_br=100
-        else
+    else
             sendNotification 100
             return 0
-        fi
     fi
-    "$DDC" "$BUS" setvcp "$ADDRESS" "$new_br"
-    echo "$new_br" > "$FILE"
-    sendNotification "$new_br"
+    setNewBrightness
 }
 
 function decreaseBrightness {
@@ -43,15 +38,16 @@ function decreaseBrightness {
     if [ "$current_br" -ge 10 ]
     then
         new_br=$((current_br - 10))
-    else
-        if [ "$current_br" -gt 0 ]
-        then
+    elif [ "$current_br" -gt 0 ]; then
             new_br=0
-        else
-            sendNotification 0
-            return 0
-        fi
+    else
+        sendNotification 0
+        return 0
     fi
+    setNewBrightness
+}
+
+function setNewBrightness {
     "$DDC" "$BUS" setvcp "$ADDRESS" "$new_br"
     echo "$new_br" > "$FILE"
     sendNotification "$new_br"
@@ -95,14 +91,10 @@ if [ -f "$LOCK_FILE" ]
         touch "$LOCK_FILE"
 fi
 
-if [ "$1" = "i" ]
-then
+if [ "$1" = "i" ]; then
     increaseBrightness
-else
-    if [ "$1" = "d" ]
-    then
-        decreaseBrightness
-    fi
+elif [ "$1" = "d" ]; then
+    decreaseBrightness
 fi
 
 rm "$LOCK_FILE"
