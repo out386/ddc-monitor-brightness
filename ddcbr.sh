@@ -3,6 +3,7 @@
 DDC="ddcutil --nodetect --noverify --bus"
 BUS="3"
 ADDRESS="10"
+ADDRESS_CONT="12"
 BASE_DIR=/home/$USER/ddcbr
 FILE=$BASE_DIR/.brightness
 LOCK_FILE=$BASE_DIR/.lock
@@ -17,44 +18,94 @@ function getCurrentBrightness {
     then
         current_br=$($DDC $BUS getvcp $ADDRESS | awk '{print $9}' | awk -F ',' '{print $1}')
     fi
+    if [[ $current_br -eq 0 ]]
+    then
+        current_cont=$($DDC $BUS getvcp $ADDRESS_CONT | awk '{print $9}' | awk -F ',' '{print $1}')
+        current_br=-$current_cont
+    fi
 }
 
 function increaseBrightness {
     getCurrentBrightness
-    if [ "$current_br" -le 90 ]
+    if [[ $current_br -gt 0 ]]
     then
-        new_br=$((current_br + 10))
-    else
-        if [ "$current_br" -lt 100 ]
+        new_cont=80
+        if [[ $current_br -le 90 ]]
         then
-            new_br=100
+            new_br=$((current_br + 10))
         else
-            sendNotification 100
-            return 0
+            if [[ $current_br -lt 100 ]]
+            then
+                new_br=100
+            else
+                sendNotification 100
+                return 0
+            fi
         fi
+        print_br=$new_br
+    else
+        if [[ $current_br -le -80 ]]
+        then
+            new_br=10
+            new_cont=80
+            print_br=10
+        else
+            new_br=0
+            if [[ $current_br -le -70 ]]
+            then
+                new_cont=80
+                print_br=0
+            else
+                new_cont=$((-$current_br + 10))
+                print_br=-$new_cont
+            fi
+       fi
     fi
+
     $DDC $BUS setvcp $ADDRESS $new_br
+    $DDC $BUS setvcp $ADDRESS_CONT $new_cont
     echo $new_br > $FILE
-    sendNotification $new_br
+    sendNotification $print_br
 }
 
 function decreaseBrightness {
     getCurrentBrightness
-    if [ "$current_br" -ge 10 ]
+    if [[ $current_br -gt 0 ]]
     then
-        new_br=$((current_br - 10))
+        new_cont=80
+        if [[ $current_br -ge 10 ]]
+        then
+            new_br=$((current_br - 10))
+        else
+            if [[ $current_br -gt 0 ]]
+            then
+                new_br=0
+            else
+                sendNotification 0
+                return 0
+            fi
+        fi
+        print_br=$new_br
     else
-        if [ "$current_br" -gt 0 ]
+        if [[ $current_br -ge -40 ]]
         then
             new_br=0
+            new_cont=40
         else
-            sendNotification 0
-            return 0
+            new_br=0
+            if [[ $current_br -ge -50 ]]
+            then
+                new_cont=40
+            else
+                new_cont=$((-$current_br - 10))
+            fi
         fi
+        print_br=-$new_cont
     fi
     $DDC $BUS setvcp $ADDRESS $new_br
+    $DDC $BUS setvcp $ADDRESS_CONT $new_cont
     echo $new_br > $FILE
-    sendNotification $new_br
+    sendNotification $print_br
 }
 
 function sendNotification {
@@ -70,7 +121,6 @@ function sendNotification {
     then
         id=0
     fi
-
     id=$(gdbus call --session \
         --dest org.freedesktop.Notifications \
         --object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify \
@@ -78,7 +128,7 @@ function sendNotification {
         $id \
         notification-display-brightness-full \
         "Brightness" \
-        "$1%" \
+        "Current: $1%" \
         [] \
         "{'type':<'int'>, 'name':<'value'>, 'value':<'$1'>, 'type':<'string'>, 'name':<'synchronous'>, 'value':<'volume'>}" 1)
     id=$(echo $id | sed 's/[^ ]* //; s/,.//')
