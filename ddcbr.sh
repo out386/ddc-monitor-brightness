@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DDC="ddcutil --nodetect --noverify --bus"
-BUS="3"
+BUS="5"
 ADDRESS="10"
 ADDRESS_CONT="12"
 BASE_DIR=/home/$USER/ddcbr
@@ -18,18 +18,18 @@ function getCurrentBrightness {
     then
         current_br=$($DDC $BUS getvcp $ADDRESS | awk '{print $9}' | awk -F ',' '{print $1}')
     fi
-    if [[ $current_br -eq 0 ]]
-    then
-        current_cont=$($DDC $BUS getvcp $ADDRESS_CONT | awk '{print $9}' | awk -F ',' '{print $1}')
-        current_br=-$current_cont
-    fi
+    #if [[ $current_br -eq 0 ]]
+    #then
+    #    current_cont=$($DDC $BUS getvcp $ADDRESS_CONT | awk '{print $9}' | awk -F ',' '{print $1}')
+    #    current_br=-$current_cont
+    #fi
 }
 
 function increaseBrightness {
     getCurrentBrightness
-    if [[ $current_br -gt 0 ]]
-    then
-        new_cont=80
+    #if [[ $current_br -gt 0 ]]
+    #then
+        #new_cont=80
         if [[ $current_br -le 90 ]]
         then
             new_br=$((current_br + 10))
@@ -43,27 +43,27 @@ function increaseBrightness {
             fi
         fi
         print_br=$new_br
-    else
-        if [[ $current_br -le -80 ]]
-        then
-            new_br=10
-            new_cont=80
-            print_br=10
-        else
-            new_br=0
-            if [[ $current_br -le -70 ]]
-            then
-                new_cont=80
-                print_br=0
-            else
-                new_cont=$((-$current_br + 10))
-                print_br=-$new_cont
-            fi
-       fi
-    fi
+    #else
+    #    if [[ $current_br -le -80 ]]
+    #    then
+    #        new_br=10
+    #        new_cont=80
+    #        print_br=10
+    #    else
+    #        new_br=0
+    #        if [[ $current_br -le -70 ]]
+    #        then
+    #            new_cont=80
+    #            print_br=0
+    #        else
+    #            new_cont=$((-$current_br + 10))
+    #            print_br=-$new_cont
+    #        fi
+    #   fi
+    #fi
 
     $DDC $BUS setvcp $ADDRESS $new_br
-    $DDC $BUS setvcp $ADDRESS_CONT $new_cont
+    #$DDC $BUS setvcp $ADDRESS_CONT $new_cont
     echo $new_br > $FILE
     sendNotification $print_br
 }
@@ -88,9 +88,9 @@ function minBrightness {
 
 function decreaseBrightness {
     getCurrentBrightness
-    if [[ $current_br -gt 0 ]]
-    then
-        new_cont=80
+    #if [[ $current_br -gt 0 ]]
+    #then
+    #    new_cont=80
         if [[ $current_br -ge 10 ]]
         then
             new_br=$((current_br - 10))
@@ -104,24 +104,24 @@ function decreaseBrightness {
             fi
         fi
         print_br=$new_br
-    else
-        if [[ $current_br -ge -40 ]]
-        then
-            new_br=0
-            new_cont=40
-        else
-            new_br=0
-            if [[ $current_br -ge -50 ]]
-            then
-                new_cont=40
-            else
-                new_cont=$((-$current_br - 10))
-            fi
-        fi
-        print_br=-$new_cont
-    fi
+    #else
+    #    if [[ $current_br -ge -40 ]]
+    #    then
+    #        new_br=0
+    #        new_cont=40
+    #    else
+    #        new_br=0
+    #        if [[ $current_br -ge -50 ]]
+    #        then
+    #            new_cont=40
+    #        else
+    #            new_cont=$((-$current_br - 10))
+    #        fi
+    #    fi
+    #    print_br=-$new_cont
+    #fi
     $DDC $BUS setvcp $ADDRESS $new_br
-    $DDC $BUS setvcp $ADDRESS_CONT $new_cont
+    #$DDC $BUS setvcp $ADDRESS_CONT $new_cont
     echo $new_br > $FILE
     sendNotification $print_br
 }
