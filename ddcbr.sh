@@ -68,6 +68,24 @@ function increaseBrightness {
     sendNotification $print_br
 }
 
+function maxBrightness {
+    #new_cont=80
+    new_br=100
+    $DDC $BUS setvcp $ADDRESS $new_br
+    #$DDC $BUS setvcp $ADDRESS_CONT $new_cont
+    echo $new_br > $FILE
+    sendNotification $new_br
+}
+
+function minBrightness {
+    #new_cont=80
+    new_br=0
+    $DDC $BUS setvcp $ADDRESS $new_br
+    #$DDC $BUS setvcp $ADDRESS_CONT $new_cont
+    echo $new_br > $FILE
+    sendNotification $new_br
+}
+
 function decreaseBrightness {
     getCurrentBrightness
     if [[ $current_br -gt 0 ]]
@@ -148,11 +166,15 @@ fi
 if [ "$1" = "i" ]
 then
     increaseBrightness
-else
-    if [ "$1" = "d" ]
-    then
-        decreaseBrightness
-    fi
+elif [ "$1" = "d" ]
+then
+    decreaseBrightness
+elif [ "$1" = "mx" ]
+then
+    maxBrightness
+elif [ "$1" = "mi" ]
+then
+    minBrightness
 fi
 
 rm $LOCK_FILE
