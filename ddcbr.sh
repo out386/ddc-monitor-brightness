@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DDC="ddcutil --nodetect --noverify --bus"
+DDC="ddcutil --noverify --bus"
 BUS="5"
 ADDRESS="10"
 BASE_DIR="${HOME}"/ddcbr
